@@ -1,0 +1,8 @@
+LLM:
+  LLM_API_KEY: "your_api_key"
+  LLM_BASE_URL: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+
+TTS:
+  DOUBAO_APPID: "your_id"
+  DOUBAO_TOKEN: "your_token"
+
