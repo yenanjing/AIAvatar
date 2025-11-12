@@ -1,4 +1,8 @@
-import os
+# -*- coding: utf-8 -*-
+"""
+@author:XuMing(xuming624@qq.com)
+@description: config module
+"""
 import yaml
 from pathlib import Path
 

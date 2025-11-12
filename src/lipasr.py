@@ -15,13 +15,8 @@
 #  limitations under the License.
 ###############################################################################
 
-import time
-import torch
 import numpy as np
 
-import queue
-from queue import Queue
-#import multiprocessing as mp
 
 from baseasr import BaseASR
 from wav2lip import audio

@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-测试GPU服务的简单脚本（优化版兼容）
+@author:XuMing(xuming624@qq.com)
+@description: 测试GPU服务的简单脚本
 """
 import requests
 import numpy as np
@@ -69,19 +70,10 @@ def test_inference(base_url, session_id):
         print(f"Total time: {result['total_time']:.4f}s")
         print(f"Network time: {elapsed:.4f}s")
         
-        # 兼容新旧版本
-        if 'batch_data' in result:
-            # 新版本：批量传输
-            batch_bytes = base64.b64decode(result['batch_data'])
-            batch_shape = tuple(result['batch_shape'])
-            frames = np.frombuffer(batch_bytes, dtype=np.uint8).reshape(batch_shape)
-            print(f"✓ Frames received (batch): {frames.shape}")
-        elif 'frames' in result:
-            # 旧版本：逐帧传输
-            print(f"✓ Frames received (individual): {len(result['frames'])}")
-        else:
-            print(f"✗ No frames in response: {list(result.keys())}")
-            return False
+        batch_bytes = base64.b64decode(result['batch_data'])
+        batch_shape = tuple(result['batch_shape'])
+        frames = np.frombuffer(batch_bytes, dtype=np.uint8).reshape(batch_shape)
+        print(f"✓ Frames received (batch): {frames.shape}")
     else:
         print(f"Error: {resp.text}")
         return False
@@ -105,7 +97,7 @@ def test_close_session(base_url, session_id):
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--url', type=str, default='http://localhost:5000', help='GPU服务器地址')
+    parser.add_argument('--url', type=str, default='http://localhost:8080', help='GPU服务器地址')
     args = parser.parse_args()
     
     base_url = args.url.rstrip('/')

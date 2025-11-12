@@ -3,7 +3,6 @@
 #  Remote GPU版本 - 通过HTTP调用远程GPU服务
 ###############################################################################
 
-import math
 import torch
 import numpy as np
 
@@ -22,16 +21,12 @@ from threading import Thread, Event
 import torch.multiprocessing as mp
 
 from lipasr import LipASR
-import asyncio
-from av import AudioFrame, VideoFrame
 from basereal import BaseReal
 
 from tqdm import tqdm
-from logger import logger
+from src.log import logger
 
-device = "cpu"  # CPU端不需要GPU
-print('Using CPU with remote GPU inference.')
-
+device = "cpu"  # 客户端使用CPU
 
 def load_avatar(avatar_id):
     """加载avatar数据"""
@@ -144,29 +139,14 @@ class RemoteGPUClient:
             
             if resp.status_code == 200:
                 result = resp.json()
-                
-                # 优化：批量解码
-                if 'batch_data' in result:
-                    # 新版本：批量传输
-                    batch_bytes = base64.b64decode(result['batch_data'])
-                    batch_shape = tuple(result['batch_shape'])
-                    frames = np.frombuffer(batch_bytes, dtype=np.uint8).reshape(batch_shape)
-                    logger.info(f"✓ Remote inference OK: batch_shape={batch_shape}, fps={result.get('fps', 0):.1f}")
-                    return frames.astype(np.float32)
-                else:
-                    # 兼容旧版本：逐帧传输
-                    frames = []
-                    for frame_b64 in result['frames']:
-                        frame_bytes = base64.b64decode(frame_b64)
-                        frame_array = np.frombuffer(frame_bytes, dtype=np.uint8)
-                        frame = cv2.imdecode(frame_array, cv2.IMREAD_COLOR)
-                        frames.append(frame.astype(np.float32))
-                    logger.info(f"✓ Remote inference OK: {len(frames)} frames")
-                    return np.array(frames)
+                batch_bytes = base64.b64decode(result['batch_data'])
+                batch_shape = tuple(result['batch_shape'])
+                frames = np.frombuffer(batch_bytes, dtype=np.uint8).reshape(batch_shape)
+                logger.info(f"✓ Remote inference OK: batch_shape={batch_shape}, fps={result.get('fps', 0):.1f}")
+                return frames.astype(np.float32)
             else:
                 logger.error(f"Remote inference failed: {resp.status_code} {resp.text}")
                 return None
-                
         except Exception as e:
             logger.exception("Error in remote inference")
             return None
@@ -196,7 +176,7 @@ def inference(quit_event, batch_size, face_list_cycle, audio_feat_queue, audio_o
     index = 0
     count = 0
     counttime = 0
-    logger.info('start remote inference')
+    logger.debug('start remote inference')
     
     while not quit_event.is_set():
         mel_batch = []
@@ -257,7 +237,7 @@ def inference(quit_event, batch_size, face_list_cycle, audio_feat_queue, audio_o
                 res_frame_queue.put((pred[i], __mirror_index(length, index), audio_frames[i*2:i*2+2]))
                 index = index + 1
                 
-    logger.info('lipreal remote inference processor stop')
+    logger.debug('lipreal remote inference processor stop')
 
 
 class LipReal(BaseReal):

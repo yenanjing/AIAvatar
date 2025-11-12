@@ -16,16 +16,15 @@
 ###############################################################################
 
 import asyncio
-import json
-import logging
 import threading
 import time
 from typing import Tuple, Dict, Optional, Set, Union
 from av.frame import Frame
 from av.packet import Packet
-from av import AudioFrame
 import fractions
-import numpy as np
+from aiortc import MediaStreamTrack
+
+from src.log import logger
 
 AUDIO_PTIME = 0.020  # 20ms audio packetization
 VIDEO_CLOCK_RATE = 90000
@@ -33,14 +32,6 @@ VIDEO_PTIME = 0.040  # 0.040 (25fps)
 VIDEO_TIME_BASE = fractions.Fraction(1, VIDEO_CLOCK_RATE)
 SAMPLE_RATE = 16000
 AUDIO_TIME_BASE = fractions.Fraction(1, SAMPLE_RATE)
-
-from aiortc import (
-    MediaStreamTrack,
-)
-
-# logging.basicConfig()
-# logger = logging.getLogger(__name__)
-from loguru import logger as mylogger
 
 
 class PlayerStreamTrack(MediaStreamTrack):
@@ -53,13 +44,13 @@ class PlayerStreamTrack(MediaStreamTrack):
         self.kind = kind
         self._player = player
         self._queue = asyncio.Queue(maxsize=100)
-        self.timelist = [] #记录最近包的时间戳
+        self.timelist = []  # 记录最近包的时间戳
         self.current_frame_count = 0
         if self.kind == 'video':
             self.framecount = 0
             self.lasttime = time.perf_counter()
             self.totaltime = 0
-    
+
     _start: float
     _timestamp: int
 
@@ -69,45 +60,38 @@ class PlayerStreamTrack(MediaStreamTrack):
 
         if self.kind == 'video':
             if hasattr(self, "_timestamp"):
-                #self._timestamp = (time.time()-self._start) * VIDEO_CLOCK_RATE
+                # self._timestamp = (time.time()-self._start) * VIDEO_CLOCK_RATE
                 self._timestamp += int(VIDEO_PTIME * VIDEO_CLOCK_RATE)
                 self.current_frame_count += 1
                 wait = self._start + self.current_frame_count * VIDEO_PTIME - time.time()
                 # wait = self.timelist[0] + len(self.timelist)*VIDEO_PTIME - time.time()               
-                if wait>0:
+                if wait > 0:
                     await asyncio.sleep(wait)
-                # if len(self.timelist)>=100:
-                #     self.timelist.pop(0)
-                # self.timelist.append(time.time())
             else:
                 self._start = time.time()
                 self._timestamp = 0
                 self.timelist.append(self._start)
-                mylogger.info(f'video start:{self._start}')
+                date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._start))
+                logger.info(f'video start:{self._start}, date str:{date_str}')
             return self._timestamp, VIDEO_TIME_BASE
-        else: #audio
+        else:  # audio
             if hasattr(self, "_timestamp"):
-                #self._timestamp = (time.time()-self._start) * SAMPLE_RATE
                 self._timestamp += int(AUDIO_PTIME * SAMPLE_RATE)
                 self.current_frame_count += 1
                 wait = self._start + self.current_frame_count * AUDIO_PTIME - time.time()
-                # wait = self.timelist[0] + len(self.timelist)*AUDIO_PTIME - time.time()
-                if wait>0:
+                if wait > 0:
                     await asyncio.sleep(wait)
-                # if len(self.timelist)>=200:
-                #     self.timelist.pop(0)
-                #     self.timelist.pop(0)
-                # self.timelist.append(time.time())
             else:
                 self._start = time.time()
                 self._timestamp = 0
                 self.timelist.append(self._start)
-                mylogger.info(f'audio start:{self._start}')
+                date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._start))
+                logger.info(f'audio start:{self._start}, date str:{date_str}')
             return self._timestamp, AUDIO_TIME_BASE
 
     async def recv(self) -> Union[Frame, Packet]:
         self._player._start(self)
-        frame,eventpoint = await self._queue.get()
+        frame, eventpoint = await self._queue.get()
         pts, time_base = await self.next_timestamp()
         frame.pts = pts
         frame.time_base = time_base
@@ -120,12 +104,12 @@ class PlayerStreamTrack(MediaStreamTrack):
             self.totaltime += (time.perf_counter() - self.lasttime)
             self.framecount += 1
             self.lasttime = time.perf_counter()
-            if self.framecount==100:
-                mylogger.info(f"[webrtc]------actual avg final fps:{self.framecount/self.totaltime:.4f}")
+            if self.framecount == 1000:
+                logger.info(f"actual avg final fps:{self.framecount / self.totaltime:.4f}")
                 self.framecount = 0
-                self.totaltime=0
+                self.totaltime = 0
         return frame
-    
+
     def stop(self):
         super().stop()
         # Drain & delete remaining frames
@@ -136,19 +120,21 @@ class PlayerStreamTrack(MediaStreamTrack):
             self._player._stop(self)
             self._player = None
 
+
 def player_worker_thread(
-    quit_event,
-    loop,
-    container,
-    audio_track,
-    video_track
+        quit_event,
+        loop,
+        container,
+        audio_track,
+        video_track
 ):
-    container.render(quit_event,loop,audio_track,video_track)
+    container.render(quit_event, loop, audio_track, video_track)
+
 
 class HumanPlayer:
 
     def __init__(
-        self, nerfreal, format=None, options=None, timeout=None, loop=False, decode=True
+            self, nerfreal, format=None, options=None, timeout=None, loop=False, decode=True
     ):
         self.__thread: Optional[threading.Thread] = None
         self.__thread_quit: Optional[threading.Event] = None
@@ -163,7 +149,7 @@ class HumanPlayer:
 
         self.__container = nerfreal
 
-    def notify(self,eventpoint):
+    def notify(self, eventpoint):
         if self.__container is not None:
             self.__container.notify(eventpoint)
 
@@ -194,7 +180,7 @@ class HumanPlayer:
                     asyncio.get_event_loop(),
                     self.__container,
                     self.__audio,
-                    self.__video                   
+                    self.__video
                 ),
             )
             self.__thread.start()
@@ -209,8 +195,7 @@ class HumanPlayer:
             self.__thread = None
 
         if not self.__started and self.__container is not None:
-            #self.__container.close()
             self.__container = None
 
     def __log_debug(self, msg: str, *args) -> None:
-        mylogger.debug(f"HumanPlayer {msg}", *args)
+        logger.debug(f"HumanPlayer {msg}", *args)

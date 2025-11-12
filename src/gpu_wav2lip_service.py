@@ -1,25 +1,24 @@
-#!/usr/bin/env python3
-###############################################################################
+# -*- coding: utf-8 -*-
+"""
+@author:XuMing(xuming624@qq.com)
+@description: config module
 #  Wav2Lip GPU推理服务
 #  运行在GPU服务器上，提供HTTP API接口
 ###############################################################################
-
+"""
 import os
 import sys
 import time
-import json
 import base64
-import pickle
 import numpy as np
 import cv2
-from io import BytesIO
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import torch
-from loguru import logger
+from src.log import logger
 
 # 导入wav2lip模型
-from wav2lip.models import Wav2Lip
+from src.wav2lip.models import Wav2Lip
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 logger.info(f'Using {device} for inference.')

@@ -1,20 +1,8 @@
-###############################################################################
-#  Copyright (C) 2024 LiveTalking@lipku https://github.com/lipku/LiveTalking
-#  email: lipku@foxmail.com
-# 
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#  
-#       http://www.apache.org/licenses/LICENSE-2.0
-# 
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-###############################################################################
-
+# -*- coding: utf-8 -*-
+"""
+@author:XuMing(xuming624@qq.com)
+@description: Server
+"""
 from flask import Flask
 import json
 import torch.multiprocessing as mp
@@ -26,8 +14,8 @@ from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration
 from aiortc.rtcrtpsender import RTCRtpSender
 
 import argparse
-import random
 import asyncio
+import uuid
 from typing import Dict
 
 from src.webrtc import HumanPlayer
@@ -41,21 +29,14 @@ opt = None
 model = None
 avatar = None
 
-#####webrtc###############################
+# webrtc
 pcs = set()
-
-
-def randN(N) -> int:
-    '''生成长度为 N的随机数 '''
-    min = pow(10, N - 1)
-    max = pow(10, N)
-    return random.randint(min, max - 1)
 
 
 def build_nerfreal(sessionid: int) -> BaseReal:
     opt.sessionid = sessionid
     # 检查是否使用远程GPU服务
-    if hasattr(opt, 'gpu_server_url') and opt.gpu_server_url:
+    if opt.gpu_server_url:
         from src.lipreal_remote import LipReal
         logger.info(f"Using remote GPU service: {opt.gpu_server_url}")
     else:
@@ -65,12 +46,11 @@ def build_nerfreal(sessionid: int) -> BaseReal:
     return nerfreal
 
 
-# @app.route('/offer', methods=['POST'])
 async def offer(request):
     params = await request.json()
     offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
 
-    sessionid = randN(6)
+    sessionid = uuid.uuid4().int % 1000000
     nerfreals[sessionid] = None
     logger.info('sessionid=%d, session num=%d', sessionid, len(nerfreals))
     nerfreal = await asyncio.get_event_loop().run_in_executor(None, build_nerfreal, sessionid)
@@ -269,30 +249,6 @@ async def post(url, data):
         logger.info(f'Error: {e}')
 
 
-async def run(push_url, sessionid):
-    nerfreal = await asyncio.get_event_loop().run_in_executor(None, build_nerfreal, sessionid)
-    nerfreals[sessionid] = nerfreal
-
-    pc = RTCPeerConnection()
-    pcs.add(pc)
-    logger.info(f"Created peer connection: pc: {pc}, sessionid: {sessionid}")
-
-    @pc.on("connectionstatechange")
-    async def on_connectionstatechange():
-        logger.info("Connection state is %s" % pc.connectionState)
-        if pc.connectionState == "failed":
-            await pc.close()
-            pcs.discard(pc)
-
-    player = HumanPlayer(nerfreals[sessionid])
-    audio_sender = pc.addTrack(player.audio)
-    video_sender = pc.addTrack(player.video)
-
-    await pc.setLocalDescription(await pc.createOffer())
-    answer = await post(push_url, pc.localDescription.sdp)
-    await pc.setRemoteDescription(RTCSessionDescription(sdp=answer, type='answer'))
-
-
 if __name__ == '__main__':
     mp.set_start_method('spawn')
     parser = argparse.ArgumentParser()
@@ -317,20 +273,14 @@ if __name__ == '__main__':
     parser.add_argument('--REF_FILE', type=str, default="zh_female_sajiaonvyou_moon_bigtts",
                         help="参考文件名或语音模型ID，默认值为 edgetts的语音模型ID zh-CN-YunxiaNeural, 若--tts指定为azuretts, 可以使用Azure语音模型ID, 如zh-CN-XiaoxiaoMultilingualNeural")
     parser.add_argument('--REF_TEXT', type=str, default=None)
-    parser.add_argument('--TTS_SERVER', type=str, default='http://127.0.0.1:9880')  # http://localhost:9000
-    # parser.add_argument('--CHARACTER', type=str, default='test')
-    # parser.add_argument('--EMOTION', type=str, default='default')
+    parser.add_argument('--TTS_SERVER', type=str, default='')  # http://localhost:9000
 
     # GPU服务器配置（用于wav2lip远程推理）
     parser.add_argument('--gpu_server_url', type=str, default='http://29.245.58.12:8080',
                         help='Remote GPU server URL for wav2lip, e.g., http://192.168.1.100:5000')
 
-    parser.add_argument('--push_url', type=str,
-                        default='http://29.245.58.12:80/rtc/v1/whip/?app=live&stream=livestream')  # rtmp://localhost/live/livestream
-    # http://29.245.58.12:80//rtc/v1/whip/?app=live&stream=livestream
-
     parser.add_argument('--max_session', type=int, default=1)  # multi session count
-    parser.add_argument('--listenport', type=int, default=8010, help="web listen port")
+    parser.add_argument('--port', type=int, default=8010, help="web listen port")
 
     opt = parser.parse_args()
     opt.customopt = []
@@ -377,16 +327,12 @@ if __name__ == '__main__':
     for route in list(appasync.router.routes()):
         cors.add(route)
 
-    logger.info('如果使用webrtc，推荐访问webrtc集成前端: http://127.0.0.1:' + str(opt.listenport) + '/index.html')
+    logger.info('如果使用webrtc，推荐访问webrtc集成前端: http://127.0.0.1:' + str(opt.port) + '/index.html')
 
-
-    def run_server(runner):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(runner.setup())
-        site = web.TCPSite(runner, '0.0.0.0', opt.listenport)
-        loop.run_until_complete(site.start())
-        loop.run_forever()
-
-
-    run_server(web.AppRunner(appasync))
+    runner = web.AppRunner(appasync)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(runner.setup())
+    site = web.TCPSite(runner, '0.0.0.0', opt.port)
+    loop.run_until_complete(site.start())
+    loop.run_forever()

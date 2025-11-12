@@ -13,23 +13,7 @@
 </p>
 
  实时交互流式数字人，实现音视频同步对话。基本可以达到商用效果  
-[wav2lip效果](https://www.bilibili.com/video/BV1scwBeyELA/) | [ernerf效果](https://www.bilibili.com/video/BV1G1421z73r/) | [musetalk效果](https://www.bilibili.com/video/BV1gm421N7vQ/)  
-国内镜像地址:<https://gitee.com/lipku/LiveTalking> 
-
-## 为避免与3d数字人混淆，原项目metahuman-stream改名为livetalking，原有链接地址继续可用
-
-## News
-- 2024.12.8 完善多并发，显存不随并发数增加
-- 2024.12.21 添加wav2lip、musetalk模型预热，解决第一次推理卡顿问题。感谢[@heimaojinzhangyz](https://github.com/heimaojinzhangyz)
-- 2024.12.28 添加数字人模型Ultralight-Digital-Human。 感谢[@lijihua2017](https://github.com/lijihua2017)
-- 2025.2.7 添加fish-speech tts
-- 2025.2.21 添加wav2lip256开源模型 感谢@不蠢不蠢
-- 2025.3.2 添加腾讯语音合成服务
-- 2025.3.16 支持mac gpu推理，感谢[@GcsSloop](https://github.com/GcsSloop) 
-- 2025.5.1 精简运行参数，ernerf模型移至git分支ernerf-rtmp
-- 2025.6.7 添加虚拟摄像头输出
-- 2025.7.5 添加豆包语音合成, 感谢[@ELK-milu](https://github.com/ELK-milu)
-- 2025.7.26 支持musetalk v1.5版本
+[wav2lip效果](https://www.bilibili.com/video/BV1scwBeyELA/)
 
 ## Features
 1. 支持多种数字人模型: ernerf、musetalk、wav2lip、Ultralight-Digital-Human
@@ -107,8 +91,5 @@ docker run --gpus all -it --network=host --rm registry.cn-beijing.aliyuncs.com/c
 :----   |:---   |:---
 wav2lip256 | 3060    | 60
 wav2lip256 | 3080Ti  | 120
-musetalk   | 3080Ti  | 42
-musetalk   | 3090    | 45
-musetalk   | 4090    | 72 
 
-wav2lip256显卡3060以上即可，musetalk需要3080Ti以上。 
+wav2lip256显卡3060以上即可。 

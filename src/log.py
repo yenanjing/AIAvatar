@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 """
-Unified logging configuration for AI Avatar.
+@author:XuMing(xuming624@qq.com)
+@description: Unified logging configuration for AI Avatar.
 
 This module provides a centralized logger configuration that can be controlled
 via environment variables or programmatically.
