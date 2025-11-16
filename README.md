@@ -1,17 +1,11 @@
- <p align="center">
- <img src="./assets/LiveTalking-logo.jpg" align="middle" width = "600"/>
-<p align="center">
 <p align="center">
     <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202-dfd.svg"></a>
-    <a href="https://github.com/lipku/LiveTalking/releases"><img src="https://img.shields.io/github/v/release/lipku/LiveTalking?color=ffa"></a>
+    <a href="https://github.com/shibing624/AIAvatar/releases"><img src="https://img.shields.io/github/v/release/shibing624/AIAvatar?color=ffa"></a>
     <a href=""><img src="https://img.shields.io/badge/python-3.10+-aff.svg"></a>
     <a href=""><img src="https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-pink.svg"></a>
-    <a href="https://github.com/lipku/LiveTalking/graphs/contributors"><img src="https://img.shields.io/github/contributors/lipku/LiveTalking?color=c4f042&style=flat-square"></a>
-    <a href="https://github.com/lipku/LiveTalking/network/members"><img src="https://img.shields.io/github/forks/lipku/LiveTalking?color=8ae8ff"></a>
-    <a href="https://github.com/lipku/LiveTalking/stargazers"><img src="https://img.shields.io/github/stars/lipku/LiveTalking?color=ccf"></a>
 </p>
 
- 实时交互流式数字人，实现音视频同步对话。基本可以达到商用效果  
+实时交互流式数字人，实现音视频同步对话。基本可以达到商用效果  
 [wav2lip效果](https://www.bilibili.com/video/BV1scwBeyELA/)
 
 ## Features
@@ -36,8 +30,8 @@ conda install pytorch==2.5.0 torchvision==0.20.0 torchaudio==2.5.0 pytorch-cuda=
 pip install -r requirements.txt
 ``` 
 安装常见问题[FAQ](https://livetalking-doc.readthedocs.io/zh-cn/latest/faq.html)  
-linux cuda环境搭建可以参考这篇文章 <https://zhuanlan.zhihu.com/p/674972886>  
-视频连不上解决方法 <https://mp.weixin.qq.com/s/MVUkxxhV2cgMMHalphr2cg>
+linux cuda环境搭建可以参考 [这篇文章](https://zhuanlan.zhihu.com/p/674972886)  
+视频连不上的[解决方法](https://mp.weixin.qq.com/s/MVUkxxhV2cgMMHalphr2cg)
 
 
 ## 2. Quick Start
