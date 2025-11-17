@@ -39,10 +39,6 @@
   <source src="https://github.com/shibing624/AIAvatar/blob/main/docs/long_hair_girl_demo.mp4" type="video/mp4">
 </video>
 
-<video width="400" controls>
-  <source src="https://github.com/shibing624/AIAvatar/blob/main/docs/demo.mp4" type="video/mp4">
-</video>
-
 ## Install
 
 ### Install dependency
