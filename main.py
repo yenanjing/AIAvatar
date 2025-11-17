@@ -41,8 +41,8 @@ default_model_path = os.path.join(pwd_path, 'models/wav2lip.pth')
 
 def ensure_models_and_avatars():
     """确保模型和形象文件存在，如果不存在则自动下载"""
-    data_dir = "./data"
-    models_dir = "./models"
+    data_dir = os.path.join(pwd_path, "data")
+    models_dir = os.path.join(pwd_path, "models")
     
     # 创建必要的目录
     os.makedirs(data_dir, exist_ok=True)
