@@ -35,12 +35,9 @@
 ![model](https://github.com/shibing624/AIAvatar/blob/main/docs/main.png)
 ## Cases
 
-<video src="https://github.com/shibing624/AIAvatar/releases/download/0.1.1/long_hair_girl_demo.mp4" 
-        controls 
-        preload="metadata"
-        width="50%">
-    Your browser does not support the video tag.
-</video>
+[![Demo Video](https://img.shields.io/badge/观看演示视频-Demo%20Video-blue)](https://github.com/shibing624/AIAvatar/releases/download/0.1.1/long_hair_girl_demo.mp4)
+
+或者直接下载观看：[long_hair_girl_demo.mp4](https://github.com/shibing624/AIAvatar/releases/download/0.1.1/long_hair_girl_demo.mp4)
 
 ## Install
 
